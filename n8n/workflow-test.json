@@ -43,7 +43,7 @@
         {
             "parameters": {
                 "method": "POST",
-                "url": "http://backend:8000/api/save-results",
+                "url": "http://backend:8000/api/results",
                 "sendBody": true,
                 "specifyBody": "json",
                 "jsonBody": "={{ $json }}",
