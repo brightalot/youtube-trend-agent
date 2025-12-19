@@ -26,7 +26,7 @@ if st.button("트렌드 수집 및 분석 시작 (Start Analysis)"):
     else:
         with st.spinner("요청을 백엔드로 전송 중입니다..."):
             try:
-                response = requests.post(f"{BACKEND_URL}/run-analysis", json={"focus_point": focus_point})
+                response = requests.post(f"{BACKEND_URL}/api/run-analysis", json={"focus_point": focus_point})
                 if response.status_code == 200:
                     st.success("✅ 분석 요청이 성공적으로 시작되었습니다! 잠시 후 결과를 확인해주세요.")
                 else:
@@ -42,7 +42,7 @@ st.subheader("2. 분석 결과 (Results)")
 if st.button("결과 새로고침 (Refresh Results)"):
     with st.spinner("데이터를 불러오는 중..."):
         try:
-            response = requests.get(f"{BACKEND_URL}/get-results")
+            response = requests.get(f"{BACKEND_URL}/api/get-results")
             if response.status_code == 200:
                 data = response.json().get("data", [])
                 if data:
