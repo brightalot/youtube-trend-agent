@@ -72,3 +72,27 @@ def get_results():
         raise HTTPException(status_code=500, detail=f"Error reading results file")
         
     return {"status": "Success", "data": results}
+
+@app.post("/api/save-results")
+async def save_results(request: dict):
+    """n8n에서 결과를 받아서 CSV로 저장"""
+    file_path = "/data/results.csv"
+    
+    # n8n sends array directly in body
+    data = request if isinstance(request, list) else request.get("data", [])
+    
+    if not data:
+        # Try to get from request body directly
+        from fastapi import Request as FastAPIRequest
+        raise HTTPException(status_code=400, detail="No data provided")
+    
+    try:
+        with open(file_path, mode='w', encoding='utf-8', newline='') as f:
+            if data:
+                writer = csv.DictWriter(f, fieldnames=data[0].keys())
+                writer.writeheader()
+                writer.writerows(data)
+        return {"status": "Success", "message": f"Saved {len(data)} records"}
+    except Exception as e:
+        print(f"Error saving CSV: {e}")
+        raise HTTPException(status_code=500, detail=f"Error saving results file")
