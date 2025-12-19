@@ -1,0 +1,96 @@
+{
+    "name": "YouTube Trend Agent (Test)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "analyze",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "analyze"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Mock Data Generation\n// Access webhook body safely\nconst body = items[0].json.body || {};\nconst focusPoint = body.focus_point || 'General';\n\nconst results = [\n  {\n    title: 'Shorts Trend #1 (' + focusPoint + ')',\n    video_id: 'vid123',\n    views: 150000,\n    analysis: 'This video is trending due to catchy music and fast editing.'\n  },\n  {\n    title: 'Shorts Trend #2 (' + focusPoint + ')',\n    video_id: 'vid456',\n    views: 89000,\n    analysis: 'Uses popular meme format regarding ' + focusPoint\n  },\n  {\n    title: 'Shorts Trend #3 (' + focusPoint + ')',\n    video_id: 'vid789',\n    views: 230000,\n    analysis: 'High engagement due to controversial topic.'\n  }\n];\n\nreturn results.map(item => ({ json: item }));"
+            },
+            "name": "Mock Search & Analyze",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Aggregate all items into a single array wrapped in object\nconst allItems = items.map(item => item.json);\nreturn [{ json: { data: allItems } }];"
+            },
+            "name": "Aggregate to Array",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://backend:8000/api/save-results",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ $json }}",
+                "options": {}
+            },
+            "name": "Save via Backend",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Mock Search & Analyze",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Mock Search & Analyze": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate to Array",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate to Array": {
+            "main": [
+                [
+                    {
+                        "node": "Save via Backend",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
