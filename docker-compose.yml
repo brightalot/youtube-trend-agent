@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # 1. Frontend (Streamlit)
+  frontend:
+    build: ./frontend
+    container_name: streamlit_ui
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - ./data:/data
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  # 2. Backend (FastAPI)
+  backend:
+    build: ./backend
+    container_name: fastapi_server
+    ports:
+      - "8000:8000"
+    environment:
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook/analyze
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+    networks:
+      - app-network
+
+  # 3. Automation (n8n)
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_agent
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=n8n
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Asia/Seoul
+      - N8N_SECURE_COOKIE=false
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168
+    volumes:
+      - ./n8n/data:/home/node/.n8n
+      - ./data:/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
